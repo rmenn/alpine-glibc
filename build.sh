@@ -9,6 +9,9 @@ echo ${ALPINE_PARENT}
 BASE_URL=http://dl-cdn.alpinelinux.org/alpine/v${ALPINE_PARENT}/releases/${ALPINE_ARCH}
 wget $BASE_URL/$ALPINE_FILENAME
 docker build -t rmenn/alpine-glibc:${ALPINE_VERSION} --build-arg ALPINE_VERSION=${ALPINE_VERSION} --build-arg ALPINE_ARCH=${ALPINE_ARCH} .
-rm ${ALPINE_FILENAME}
 docker push rmenn/alpine-glibc:${ALPINE_VERSION}
+docker build -t rmenn/alpine-glibc-nodejs:${ALPINE_VERSION} --build-arg ALPINE_VERSION=${ALPINE_VERSION} --build-arg ALPINE_ARCH=${ALPINE_ARCH} -f Dockerfile.npm .
+docker push rmenn/alpine-glibc-nodejs:${ALPINE_VERSION}
+rm ${ALPINE_FILENAME}
 docker rmi rmenn/alpine-glibc:${ALPINE_VERSION}
+docker rmi rmenn/alpine-glibc-nodejs:${ALPINE_VERSION}
