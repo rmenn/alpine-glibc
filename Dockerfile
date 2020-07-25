@@ -1,3 +1,8 @@
+ARG alpine_pkg_glibc_image=ubuntu:19.04
+
+FROM ${alpine_pkg_glibc_image} as libgcc
+RUN chmod +x /lib/x86_64-linux-gnu/libz.so.1.2.11
+
 FROM scratch
 
 ARG ALPINE_ARCH
@@ -6,6 +11,7 @@ ARG ALPINE_VERSION
 ADD alpine-minirootfs-${ALPINE_VERSION}-${ALPINE_ARCH}.tar.gz /
 
 ENV LANG=C.UTF-8
+COPY --from=libgcc /lib/x86_64-linux-gnu/libgcc_s.so.1 /lib/x86_64-linux-gnu/libz.so.1.2.11 /usr/glibc-compat/lib/
 
 RUN ALPINE_GLIBC_BASE_URL="https://github.com/sgerrand/alpine-pkg-glibc/releases/download" && \
     ALPINE_GLIBC_PACKAGE_VERSION="2.31-r0" && \
@@ -37,6 +43,21 @@ RUN ALPINE_GLIBC_BASE_URL="https://github.com/sgerrand/alpine-pkg-glibc/releases
     echo "export LANG=$LANG" > /etc/profile.d/locale.sh && \
     \
     apk del glibc-i18n && \
+    \
+    rm /usr/glibc-compat/lib/ld-linux-x86-64.so.2 && \
+    ln -s /usr/glibc-compat/lib/ld-2.30.so /usr/glibc-compat/lib/ld-linux-x86-64.so.2 && \
+    \
+    sed -i -e 's#/bin/bash#/bin/sh#' /usr/glibc-compat/bin/ldd && \
+    sed -i -e 's#RTLDLIST=.*#RTLDLIST="/usr/glibc-compat/lib/ld-linux-x86-64.so.2"#' /usr/glibc-compat/bin/ldd && \
+    \
+    rm \
+        /lib/ld-linux-x86-64.so.2 \
+        /etc/ld.so.cache && \
+    echo "/usr/glibc-compat/lib" > /usr/glibc-compat/etc/ld.so.conf && \
+    /usr/glibc-compat/sbin/ldconfig -i && \
+    rm -r \
+        /var/cache/ldconfig/aux-cache \
+        /var/cache/ldconfig && \
     \
     rm "/root/.wget-hsts" && \
     apk del .build-dependencies && \
