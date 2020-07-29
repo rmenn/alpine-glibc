@@ -1,3 +1,3 @@
 FROM rmenn/alpine-glibc:3.12.0
 
-RUN apk add --no-cache nodejs
+RUN apk add --no-cache nodejs npm ca-certificates
